@@ -2,13 +2,15 @@ var gulp = require('gulp'),
     sass = require('gulp-sass'),
     autoprefixer = require('gulp-autoprefixer'),
     minifycss = require('gulp-minify-css'),
-    path = 'scss',
+    path = 'style',
+    imgpath = 'img',
     plumber = require('gulp-plumber'),
     browserSync = require('browser-sync').create(),
     jshint = require('gulp-jshint'),
     rename = require('gulp-rename'),
     notify = require("gulp-notify"),
-    cssBase64 = require('gulp-css-base64');
+    cssBase64 = require('gulp-css-base64'),
+    imageop = require('gulp-image-optimization');
 
 function ScssErrorAlert(error){
     notify.onError({title: "SCSS Error", message: error.toString(), sound: "Sosumi"})(error); //Error Notification
@@ -16,7 +18,13 @@ function ScssErrorAlert(error){
     this.emit("end"); //End function
 };
 
-
+gulp.task('images', function(cb) {
+    gulp.src([imgpath+'/**/*.png','src/**/*.jpg','src/**/*.gif','src/**/*.jpeg']).pipe(imageop({
+        optimizationLevel: 5,
+        progressive: true,
+        interlaced: true
+    })).pipe(gulp.dest('public/images')).on('end', cb).on('error', cb);
+});
 
 gulp.task('styles', function() {
   return gulp.src(path+'/*.scss')
@@ -32,16 +40,16 @@ gulp.task('styles', function() {
     .pipe(rename({suffix: '.min'}))
     .pipe(minifycss())
     .pipe(gulp.dest(path))
-    .pipe(browserSync.stream())    
+    .pipe(browserSync.stream())
 });
 
 
 
-gulp.task('watch', function() {  
+gulp.task('watch', function() {
     gulp.watch(path+'/**/*.scss', ['styles']);
     gulp.watch(path+'/*.scss', ['styles']);
     gulp.watch('js/**/*.js', ['jshint']);
- 
+
 });
 
 gulp.task('jshint', function() {
@@ -53,6 +61,8 @@ gulp.task('jshint', function() {
 
 
 
+// Favicon
+// sprite
 gulp.task('browser-sync', function() {
     browserSync.init({
         proxy: "adrian.dev"
@@ -64,7 +74,7 @@ gulp.task('browser-sync', function() {
 });
 
 gulp.task('encode', function () {
-    return gulp.src('scss/main.min.css')
+    return gulp.src(path+'/main.min.css')
         .pipe(cssBase64())
         .pipe(gulp.dest(path));
 });
@@ -72,6 +82,3 @@ gulp.task('encode', function () {
 gulp.task('default', ['watch', 'browser-sync', 'encode'], function() {
 
 });
-
-// Favicon
-// sprite
